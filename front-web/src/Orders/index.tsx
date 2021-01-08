@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 
-import './styles.css';
-
 import ProductsList from './ProductsList';
 import StepsHeader from './StepsHeader';
 
 import { OrderLocationData, Product } from './types';
-import { fetchProducts } from '../api';
+import { fetchProducts, saveOrder } from '../api';
 import OrderLocation from './OrderLocation';
 import OrderSummary from './OrderSummary';
 import Footer from '../Footer';
 import { checkIsSelected } from './helpers';
+import { toast } from 'react-toastify';
+import './styles.css';
 
 function Orders() {
 
@@ -39,13 +39,29 @@ function Orders() {
         }
     }
 
+    const handleSubmit = () => {
+        const productsIds = selectedProducts.map(({ id }) => ({ id }));
+        const payload = {
+            ...orderLocation!,
+            products: productsIds
+        }
+
+        saveOrder(payload).then((response) => {
+            toast.error(`Pedido enviado com sucesso! Nº ${response.data.id}`);
+            setSelectedProducts([]);
+        })
+            .catch(() => {
+                toast.warning('Erro ao enviar pedido');
+            })
+    }
+
     return (
         <>
             <div className="orders-container">
                 <StepsHeader />
                 <ProductsList products={products} onSelectProduct={handleSelectProduct} selectedProducts={selectedProducts} />
                 <OrderLocation onChangeLocation={location => setOrderLocation} />
-                <OrderSummary amount={selectedProducts.length} totalPrice={totalPrice} />
+                <OrderSummary amount={selectedProducts.length} totalPrice={totalPrice} onSubmit={handleSubmit} />
             </div>
             <Footer />
         </>
